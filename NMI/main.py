@@ -63,12 +63,8 @@ arr = np.array(img)
 
 
 if mode == 1:
-    if option == 1:
-         bits = text_to_bitstring(text)
 
-    if option == 2:
-         bits = image_to_bitstring(np.array(secret))
-
+    bits = encode_length_and_data(text_to_bitstring(text))
     interpolated = nmi_interpolation(arr)
     img_int = Image.fromarray(interpolated)
     img_int.save("interpolated.png")
@@ -89,12 +85,12 @@ if mode == 1:
 if mode == 2:
      
      ref = extract_reference_image(arr)
-     extracted = extract_bits_from_difference(arr, nmi_interpolation(ref))
-     message = bitstring_to_text(extracted)
-     if option == 1:
-        print("Извлеченное сообщение: ", message)
-        #print("Длина извлеченного сообщения: ", len(str(message)))
-        #print("EC: ", ec(extracted, arr))
-     if option == 2:
-          print("Извлеченное изображение:")
-          Image.fromarray(bitstring_to_image(extracted[:6144], (16,16))).show()
+     raw_bits = extract_bits_from_difference(arr, nmi_interpolation(ref))
+     clean_bits = decode_length_and_data(raw_bits)
+     message = bitstring_to_text(clean_bits)
+
+     print("Извлеченное сообщение: ", message)
+     print(text_to_bitstring(message))
+     print("Длина извлеченного сообщения: ", len(str(message)))
+     print("EC: ", ec(clean_bits, arr))
+

@@ -37,3 +37,15 @@ def bitstring_to_image(bitstring: str, shape: tuple) -> np.ndarray:
     
     bytes_array = [int(bitstring[i:i+8], 2) for i in range(0, len(bitstring), 8)]
     return np.array(bytes_array, dtype=np.uint8).reshape(shape)
+
+def encode_length_and_data(data_bits: str) -> str:
+    length = len(data_bits)
+    length_bits = format(length, '032b')
+    return length_bits + data_bits
+
+def decode_length_and_data(extracted_bits: str) -> str:
+    if len(extracted_bits) < 32:
+        return ''
+    length = int(extracted_bits[:32], 2)
+    return extracted_bits[32:32 + length]
+
