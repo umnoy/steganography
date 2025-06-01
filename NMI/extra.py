@@ -1,9 +1,11 @@
 import numpy as np
 from PIL import Image
 
-def estimate_capacity(img):
-    w, h, c = img.shape
-    return w * h * c
+def estimate_capacity(img, channels_per_pixel=3, pixels_used_per_block=3):
+    h, w, _ = img.shape
+    blocks = (h // 2) * (w // 2)
+    return blocks * pixels_used_per_block * channels_per_pixel
+
 
 def text_to_bitstring(text):
     return ''.join(format(byte, '08b') for byte in text.encode('utf-8'))

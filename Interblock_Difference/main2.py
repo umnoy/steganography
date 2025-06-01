@@ -8,10 +8,11 @@ from skimage.metrics import structural_similarity as ssim
 BLOCK_SIZE = 8
 WATERMARK_SIZE = 64
 IMAGE_SIZE = 512
-COEFF_COORDS = (0, 2)
+COEFF_COORDS = (1, 3)
 T = 80
 K = 12
 Z = 2
+ARNOLD_ITERATIONS = 5 
 
 def apply_dct(block):
     return dctn(block, norm='ortho')
@@ -142,15 +143,17 @@ def embed_watermark_blue_channel_lr(image_path, watermark_path, T, K, Z, coeff_c
     if watermark is None:
         print(f"Ошибка: Водяной знак не найден по пути: {watermark_path}")
         return None
+    
+    # Применяем преобразование Арнольда к водяному знаку
+    watermark_transformed = arnold_transform(watermark, ARNOLD_ITERATIONS)
+    
     num_blocks_x = IMAGE_SIZE // block_size
     num_blocks_y = IMAGE_SIZE // block_size
     expected_wm_len = num_blocks_y * (num_blocks_x - 1)
-    watermark_flat = (watermark > 128).astype(np.uint8).flatten()
+    watermark_flat = (watermark_transformed > 128).astype(np.uint8).flatten()
     if len(watermark_flat) < expected_wm_len:
-        print(f"Предупреждение: Размер водяного знака ({len(watermark_flat)} битов) меньше емкости ({expected_wm_len} битов) для LR. Будут встроены только первые {len(watermark_flat)} битов.")
         watermark_to_embed = watermark_flat
     elif len(watermark_flat) > expected_wm_len:
-        print(f"Предупреждение: Размер водяного знака ({len(watermark_flat)} битов) превышает емкость ({expected_wm_len} битов) для LR. Будут встроены только первые {expected_wm_len} битов.")
         watermark_to_embed = watermark_flat[:expected_wm_len]
     else:
         watermark_to_embed = watermark_flat
@@ -246,14 +249,18 @@ def extract_watermark_blue_channel_lr_64x64_dominant_pad_fixed(watermarked_image
             dominant_color = 0
     else:
         dominant_color = 0
-    print(f"Доминирующий бит в надежно извлеченных данных: {dominant_color}")
+    #print(f"Доминирующий бит в надежно извлеченных данных: {dominant_color}")
     target_shape = (WATERMARK_SIZE, WATERMARK_SIZE)
     if extracted_watermark_actual.shape != target_shape:
         padding_needed = ((0, target_shape[0] - extracted_watermark_actual.shape[0]), (0, 0))
         extracted_watermark_padded = np.pad(extracted_watermark_actual, padding_needed, mode='constant', constant_values=dominant_color)
     else:
         extracted_watermark_padded = extracted_watermark_actual
-    return extracted_watermark_padded
+    
+    # Применяем обратное преобразование Арнольда
+    extracted_watermark_restored = inverse_arnold_transform(extracted_watermark_padded, ARNOLD_ITERATIONS)
+    inverted_extracted_wm = 1 - extracted_watermark_restored
+    return inverted_extracted_wm
 
 def main():
     print("Выберите режим:")
@@ -276,21 +283,21 @@ def main():
             image_path, watermark_path, T, K, Z, COEFF_COORDS, BLOCK_SIZE
         )
         if watermarked_image is not None:
-            cv2.imwrite('watermarked_image_blue_channel_lr.png', watermarked_image)
-            print("Изображение с водяным знаком сохранено как 'watermarked_image_blue_channel_lr.png'")
+            cv2.imwrite('watermarked_image.png', watermarked_image)
+            print("Изображение с водяным знаком сохранено как 'watermarked_image.png'")
     else:
         watermarked_image_path = input("Введите путь к изображению с водяным знаком: ")
         extracted_wm = extract_watermark_blue_channel_lr_64x64_dominant_pad_fixed(
             watermarked_image_path, T, K, COEFF_COORDS, BLOCK_SIZE
         )
-        inverted_extracted_wm = 1 - extracted_wm
+        inverted_extracted_wm =  extracted_wm
         if extracted_wm is not None:
             print("\nИзвлеченный водяной знак:")
-            print(extracted_wm)
+            print(inverted_extracted_wm)
             if extracted_wm.ndim == 2:
                 if extracted_wm.shape[0] > 0 and extracted_wm.shape[1] > 0:
-                    cv2.imwrite('extracted_watermark_inverted_colors_fixed.png', inverted_extracted_wm.astype(np.uint8) * 255)
-                    print(f"Извлеченный водяной знак сохранен как 'extracted_watermark_inverted_colors_fixed.png' с формой {extracted_wm.shape}")
+                    cv2.imwrite('extracted_watermark.png', inverted_extracted_wm.astype(np.uint8) * 255)
+                    print(f"Извлеченный водяной знак сохранен как 'extracted_watermark.png' с формой {extracted_wm.shape}")
                 else:
                     print("Извлеченный водяной знак пустой или имеет нулевой размер, не может быть сохранен как изображение.")
             else:

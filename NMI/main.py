@@ -64,7 +64,7 @@ arr = np.array(img)
 
 if mode == 1:
 
-    bits = encode_length_and_data(text_to_bitstring(text))
+    bits = encode_length_and_data(text_to_bitstring(100 * text))
     interpolated = nmi_interpolation(arr)
     img_int = Image.fromarray(interpolated)
     img_int.save("interpolated.png")
@@ -90,7 +90,6 @@ if mode == 2:
      message = bitstring_to_text(clean_bits)
 
      print("Извлеченное сообщение: ", message)
-     print(text_to_bitstring(message))
      print("Длина извлеченного сообщения: ", len(str(message)))
      print("EC: ", ec(clean_bits, arr))
 

@@ -7,8 +7,8 @@ def estimate_capacity_rgb(image_array):
 
     h, w, _ = image_array.shape
 
-    h_interp = h * 2 - 1
-    w_interp = w * 2 - 1
+    h_interp = h//2 * 4
+    w_interp = w//2 * 4
 
     total_pixels = h_interp * w_interp
     reference_pixels = h * w
