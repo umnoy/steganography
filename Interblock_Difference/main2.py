@@ -257,7 +257,6 @@ def extract_watermark_blue_channel_lr_64x64_dominant_pad_fixed(watermarked_image
     else:
         extracted_watermark_padded = extracted_watermark_actual
     
-    # Применяем обратное преобразование Арнольда
     extracted_watermark_restored = inverse_arnold_transform(extracted_watermark_padded, ARNOLD_ITERATIONS)
     inverted_extracted_wm = 1 - extracted_watermark_restored
     return inverted_extracted_wm

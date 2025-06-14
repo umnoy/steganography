@@ -4,7 +4,7 @@ import os
 import sys
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
-from main3 import embed_watermark_blue_channel_lr, extract_watermark_blue_channel_lr_64x64_dominant_pad_fixed
+from main2 import embed_watermark_blue_channel_lr, extract_watermark_blue_channel_lr_64x64_dominant_pad_fixed
 import itertools
 import matplotlib.pyplot as plt
 
@@ -149,7 +149,7 @@ def run_tests(image_path, watermark_path):
     original_wm = (original_wm > 128).astype(np.uint8)
 
     # Define parameter sets
-    COEFF_COORDS_LIST = [(1, 3), (0, 1)]
+    COEFF_COORDS_LIST = [(4, 3), (0, 1)]
     T_LIST = [80, 150]
     K_LIST = [12, 20]
     Z_LIST = [2, 7]
